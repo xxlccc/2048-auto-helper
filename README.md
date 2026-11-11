@@ -1,7 +1,7 @@
 # 2048 自动助手（PC 端 Python + Android App）
 
 通过 **ADB 截屏 → CNN 识别棋盘 → Expectimax 决策 → 自动滑动**，让程序替你玩手机上的 2048。
-仓库包含一套完整的 PC 端 Python 工具链（识图、决策、训练、自动执行），以及一个可独立安装的 Android App。
+当前可用的是 PC 端 Python 工具链（识图、决策、训练、自动执行）。Android App 仍在开发中、暂不可用，详见「已知问题」。
 
 ```
 ┌──────────┐   ┌───────────┐   ┌──────────────┐   ┌──────────┐
@@ -16,19 +16,28 @@
 - **决策**：Expectimax + 置换表 + 蛇形启发式评估；可选稀疏 n-tuple；稠密 n-tuple（`极限/`）仍在调试，见「已知问题」
 - **执行**：PC 端走 ADB 滑动，可半自动逐步确认，也可全自动连续下棋
 - **训练**：监督学习训练识图模型；TD(0) 自对弈训练 n-tuple 评估网络
-- **Android**：PyTorch Mobile 端侧推理 + 无障碍服务截图/滑动 + 悬浮窗控制，手机独立运行，无需电脑
+- **Android**（开发中，暂不可用）：PyTorch Mobile 端侧推理 + 无障碍服务截图/滑动 + 悬浮窗控制，目标是手机独立运行、无需电脑
 
 ## 已知问题
 
-> ⚠️ **极限分支（`极限/`，dense n-tuple）目前仍有问题，暂不可用。**
-> 请保持 `config.yaml` 里的 `engine_model: snake`（默认值）或改用 `ntuple`。下文「训练」第 4 步仅供参考，暂不建议执行。
+> ⚠️ 目前**只有 PC 端（Python + ADB）可用**，下面两块都还不能用。
 
-已知的具体情况：
+### 极限分支（`极限/`，dense n-tuple）—— 仍有问题，暂不可用
+
+请保持 `config.yaml` 里的 `engine_model: snake`（默认值）或改用 `ntuple`；下文「训练」第 4 步仅供参考，暂不建议执行。
 
 - **模型文件缺失时不会报错，而是静默降级**：`极限/model/extreme.pkl` 有 256 MB，超过 GitHub 单文件上限，没有随仓库分发。把 `engine_model` 设成 `extreme` 后，程序只打印一行中文提示就继续跑，实际仍在用蛇形评估——看起来"能用"，其实不是极限模型在决策。
 - **依赖 numba，环境容易装不上**：`极限/board_fast.py` 需要 numba 做 JIT 加速。numba 目前不支持 Python 3.14，此时训练会退回纯 Python 实现，速度远达不到设计中的"快 5~10 倍"。
 - **内存占用大**：模型常驻约 256 MB（4 张 16.7M 的 float32 表），再加 Python 本身的开销，低配机器容易吃掉大半内存。
 - **端到端链路未验证通过**：从「训练 → 保存 → 加载 → 实战」整条路径尚未跑通并确认效果，暂不保证可用。
+
+### Android App（`android/`）—— 尚未完成，不可用
+
+**Android 端还没有做完，处于不可用状态。** 仓库里只有源码，没有随附 APK，也没有 Gradle Wrapper，功能未打通；请暂时只在 PC 端运行。
+
+- **没有可安装的产物**：仓库里不含 `.apk`，克隆下来没法直接装到手机上试。
+- **缺少 Gradle Wrapper**：`android/` 下只有 `build.gradle.kts`、`settings.gradle.kts`、`gradle.properties`，没有 `gradlew`，命令行无法直接构建，需要先用 Android Studio 补全 wrapper。
+- **功能未验证**：无障碍服务截图、手势滑动、PyTorch Mobile 推理这条链路尚未在真机上跑通确认。
 
 修复进展会更新在本节；遇到具体报错欢迎提 issue。
 
@@ -58,7 +67,7 @@
 ├── data/
 │   ├── model/           # 训练好的模型：tile_cnn.pth / n_tuple.pkl / 类别表 / 棋盘坐标缓存
 │   └── tiles/           # 识图训练样本（ImageFolder 格式，按数字分类）
-├── android/             # Android App（Kotlin，PyTorch Mobile）
+├── android/             # Android App（Kotlin，开发中，暂不可用）
 ├── android_assets/      # 打包进 APK 的模型与坐标
 └── docs/                # 设计文档与实现计划
 ```
@@ -126,15 +135,17 @@ python tdl_train.py --games 50000 --lr 0.01
 python export_model.py
 ```
 
-## Android App
+## Android App（开发中，暂不可用）
 
-`android/` 是一个独立的 Kotlin 工程（minSdk 26 / targetSdk 34，依赖 PyTorch Mobile 2.2.0）：
+> 🚧 **尚未完成，当前不可用**，请先使用 PC 端。以下是开发中的工程说明，供后续继续开发参考。
 
-1. 用 Android Studio 打开 `android/` 目录
-2. 首次构建会下载 Gradle 与依赖，直接 Run 安装到手机
-3. 手机端开启无障碍服务、授予悬浮窗权限，打开悬浮窗即可开始
+`android/` 是一个独立的 Kotlin 工程（minSdk 26 / targetSdk 34，依赖 PyTorch Mobile 2.2.0），目标是让手机独立运行、不再需要电脑：
 
-模型与棋盘坐标随 APK 打包在 `android/app/src/main/assets/` 下，可直接替换为重新训练的文件。
+- 用 Android Studio 打开 `android/` 目录（工程未附带 Gradle Wrapper，需由 IDE 生成后才能构建）
+- 端侧用 PyTorch Mobile 2.2.0 做 CNN 推理，通过无障碍服务截屏、手势滑动
+- 模型与棋盘坐标放在 `android/app/src/main/assets/` 下，可直接替换为重新训练的文件
+
+上述链路尚未在真机上验证通过，暂不保证可用。
 
 ## 关于模型文件
 
