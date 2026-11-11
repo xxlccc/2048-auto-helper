@@ -1,0 +1,35 @@
+# 2048 自动助手配置
+# 直接改这个文件即可，不需要改代码
+
+# 策略: conservative / standard / aggressive
+strategy: standard
+
+# 模式: semi（半自动，每步确认）/ auto（全自动）
+mode: auto
+
+# 识别置信度阈值（低于此值会弹窗让你修正）
+confidence_threshold: 0.7
+
+# 滑动前等待（秒）
+swipe_delay: 0.1
+
+# 滑动后等待（秒，确保动画完成再截图）
+post_swipe_delay: 0.66
+
+# 全自动模式最大连续步数（0 = 不限）
+max_auto_steps: 0
+
+# 游戏等级: 1 / 2 / 3
+# 1 = 75%出1, 20%出2，5%出3
+# 2 = 75%出2, 20%出3，5%出4
+# 3 = 70%出3, 20%出4，10%出5
+level: 3
+
+# 决策模型: snake / ntuple / extreme
+# snake   = 蛇形启发式（默认，不需训练）
+# ntuple  = 稀疏 n-tuple（python tdl_train.py 训练）
+# extreme = 密集 n-tuple（python 极限/train_extreme.py 训练，最强）
+engine_model: snake
+
+# 自动统计新棋子概率：true / false（运行时在终端显示实际分布）
+track_spawn: true

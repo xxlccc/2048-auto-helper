@@ -1,0 +1,32 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+
+# ---------- 编辑器 / IDE ----------
+.idea/
+.vscode/
+*.iml
+
+# ---------- 本机工具配置 ----------
+.claude/
+.DS_Store
+Thumbs.db
+
+# ---------- 大文件 ----------
+# 256 MB，超过 GitHub 单文件 100 MB 硬上限，需要 Git LFS 或 Release 附件
+极限/model/extreme.pkl
+
+# ---------- 第三方资料 ----------
+# Stack Overflow 文章的 PDF 存档，正文已转成 Markdown（so_2048.md），需要保留时删掉这行
+*.pdf
+
+# ---------- 第三方示例仓库（自带 .git，不能嵌套提交）----------
+new/tdl2048-python-demo/
+
+# ---------- 运行时产物 ----------
+*.log

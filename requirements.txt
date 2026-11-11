@@ -1,0 +1,16 @@
+# 2048 自动助手 依赖清单
+# pip install -r requirements.txt
+
+# 图像处理
+opencv-python>=4.5
+numpy>=1.21
+
+# 深度学习（CNN 识图）
+torch>=2.0
+torchvision>=0.15
+
+# 决策加速（极限训练用）
+numba>=0.57
+
+# 配置文件
+pyyaml>=6.0
