@@ -13,10 +13,24 @@
 ## 功能
 
 - **识图**：小型 CNN（PyTorch）识别 4×4 棋盘每格数字，置信度低于阈值时弹窗人工修正，并可用修正样本增量重训
-- **决策**：Expectimax + 置换表 + 蛇形启发式评估；可选稀疏 n-tuple、稠密 n-tuple（性能最强）
+- **决策**：Expectimax + 置换表 + 蛇形启发式评估；可选稀疏 n-tuple；稠密 n-tuple（`极限/`）仍在调试，见「已知问题」
 - **执行**：PC 端走 ADB 滑动，可半自动逐步确认，也可全自动连续下棋
 - **训练**：监督学习训练识图模型；TD(0) 自对弈训练 n-tuple 评估网络
 - **Android**：PyTorch Mobile 端侧推理 + 无障碍服务截图/滑动 + 悬浮窗控制，手机独立运行，无需电脑
+
+## 已知问题
+
+> ⚠️ **极限分支（`极限/`，dense n-tuple）目前仍有问题，暂不可用。**
+> 请保持 `config.yaml` 里的 `engine_model: snake`（默认值）或改用 `ntuple`。下文「训练」第 4 步仅供参考，暂不建议执行。
+
+已知的具体情况：
+
+- **模型文件缺失时不会报错，而是静默降级**：`极限/model/extreme.pkl` 有 256 MB，超过 GitHub 单文件上限，没有随仓库分发。把 `engine_model` 设成 `extreme` 后，程序只打印一行中文提示就继续跑，实际仍在用蛇形评估——看起来"能用"，其实不是极限模型在决策。
+- **依赖 numba，环境容易装不上**：`极限/board_fast.py` 需要 numba 做 JIT 加速。numba 目前不支持 Python 3.14，此时训练会退回纯 Python 实现，速度远达不到设计中的"快 5~10 倍"。
+- **内存占用大**：模型常驻约 256 MB（4 张 16.7M 的 float32 表），再加 Python 本身的开销，低配机器容易吃掉大半内存。
+- **端到端链路未验证通过**：从「训练 → 保存 → 加载 → 实战」整条路径尚未跑通并确认效果，暂不保证可用。
+
+修复进展会更新在本节；遇到具体报错欢迎提 issue。
 
 ## 目录结构
 
@@ -37,7 +51,7 @@
 ├── train.py             # 识图模型监督训练
 ├── tdl_train.py         # TD(0) 训练稀疏 n-tuple
 ├── export_model.py      # 导出 TorchScript 供 Android 使用
-├── 极限/                 # 稠密 n-tuple（更强，训练更慢）
+├── 极限/                 # 稠密 n-tuple（实验中，暂不可用，见「已知问题」）
 │   ├── board_fast.py
 │   ├── n_tuple_dense.py
 │   └── train_extreme.py
@@ -90,7 +104,7 @@ python main.py       # 启动
 | `swipe_delay` / `post_swipe_delay` | 滑动前后等待时间（秒） |
 | `max_auto_steps` | 全自动最大步数，0 为不限 |
 | `level` | 游戏等级 1/2/3，决定新棋子的生成概率 |
-| `engine_model` | `snake`（默认，免训练）/ `ntuple` / `extreme` |
+| `engine_model` | `snake`（默认，免训练）/ `ntuple`（推荐）/ `extreme`（**暂不可用**） |
 | `track_spawn` | 运行时统计实际生成概率 |
 
 ## 训练
@@ -105,8 +119,8 @@ python train.py
 # 3) TD(0) 自对弈训练稀疏 n-tuple，输出 data/model/n_tuple.pkl
 python tdl_train.py --games 50000 --lr 0.01
 
-# 4) 稠密 n-tuple（更强），输出 极限/model/extreme.pkl
-python 极限/train_extreme.py
+# 4) 稠密 n-tuple —— ⚠ 暂时有问题，勿用于实战，见「已知问题」
+#    python 极限/train_extreme.py
 
 # 5) 导出 TorchScript 供 Android 端使用
 python export_model.py
